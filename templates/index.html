@@ -1,32 +1,166 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <script src="./static/mywebscript.js"></script>
-    <style>
-        .center-heading {
-            text-align: center;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <div class="card">
-        <div class="card-body">
-            <h1 class="center-heading">NLP - Emotion Detection</h1> 
-            <div style="padding: 25px 25px 25px 25px;">
-            <h2 class="mb-3">
-                <label class="form-label">Please enter the text to be analyzed</label>
-                <input type="textarea" class="form-control" id="textToAnalyze">
-            </h2>
-
-            <div style="padding: 25px 25px 25px 25px;">
-                <button onclick="RunSentimentAnalysis()" class="btn btn-secondary">Run Sentiment Analysis</button>
+    <div class="container">
+        <h1>Emotion Detector</h1>
+        <p>Analyze text to detect emotions using AI-powered Watson NLP</p>
+        
+        <div class="form-section">
+            <textarea 
+                id="textInput" 
+                placeholder="Enter text to analyze..." 
+                rows="5"
+            ></textarea>
+            
+            <button onclick="analyzeText()">Analyze Emotion</button>
+            <button onclick="clearForm()">Clear</button>
+        </div>
+        
+        <div id="errorMessage" class="error-message" style="display:none;"></div>
+        
+        <div id="resultSection" class="result-section" style="display:none;">
+            <h2>Results</h2>
+            <div class="emotion-scores">
+                <div class="score-item">
+                    <span class="emotion-label">Joy</span>
+                    <div class="score-bar">
+                        <div id="joyBar" class="score-fill joy"></div>
+                    </div>
+                    <span id="joyValue" class="score-value">0%</span>
+                </div>
+                
+                <div class="score-item">
+                    <span class="emotion-label">Anger</span>
+                    <div class="score-bar">
+                        <div id="angerBar" class="score-fill anger"></div>
+                    </div>
+                    <span id="angerValue" class="score-value">0%</span>
+                </div>
+                
+                <div class="score-item">
+                    <span class="emotion-label">Sadness</span>
+                    <div class="score-bar">
+                        <div id="sadnessBar" class="score-fill sadness"></div>
+                    </div>
+                    <span id="sadnessValue" class="score-value">0%</span>
+                </div>
+                
+                <div class="score-item">
+                    <span class="emotion-label">Fear</span>
+                    <div class="score-bar">
+                        <div id="fearBar" class="score-fill fear"></div>
+                    </div>
+                    <span id="fearValue" class="score-value">0%</span>
+                </div>
+                
+                <div class="score-item">
+                    <span class="emotion-label">Disgust</span>
+                    <div class="score-bar">
+                        <div id="disgustBar" class="score-fill disgust"></div>
+                    </div>
+                    <span id="disgustValue" class="score-value">0%</span>
+                </div>
             </div>
-            <div style="padding: 25px 25px 25px 25px;"></div>
-            <h2 class="mb-3">
-                <label class="form-label">Result of Emotion Detection</label>
-            </h2>
-
-            <div id="system_response" style="padding: 25px 25px 25px 25px;"></div>
+            
+            <div class="dominant-emotion">
+                <h3>Dominant Emotion:</h3>
+                <p id="dominantEmotionText" class="emotion-text"></p>
+            </div>
         </div>
     </div>
+    
+    <script>
+        async function analyzeText() {
+            const textInput = document.getElementById('textInput').value;
+            const errorMessage = document.getElementById('errorMessage');
+            const resultSection = document.getElementById('resultSection');
+            
+            // Clear previous errors and results
+            errorMessage.style.display = 'none';
+            resultSection.style.display = 'none';
+            
+            if (!textInput.trim()) {
+                errorMessage.textContent = 'Please enter some text to analyze';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/emotion_detector', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ textToAnalyze: textInput })
+                });
+                
+                const data = await response.json();
+                
+                if (response.status === 400) {
+                    errorMessage.textContent = data.error || 'Error analyzing text';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+                
+                // Display results
+                displayResults(data);
+                resultSection.style.display = 'block';
+            } catch (error) {
+                errorMessage.textContent = 'Error connecting to server: ' + error.message;
+                errorMessage.style.display = 'block';
+            }
+        }
+        
+        function displayResults(data) {
+            // Convert scores to percentages
+            const joy = (data.joy * 100).toFixed(1);
+            const anger = (data.anger * 100).toFixed(1);
+            const sadness = (data.sadness * 100).toFixed(1);
+            const fear = (data.fear * 100).toFixed(1);
+            const disgust = (data.disgust * 100).toFixed(1);
+            
+            // Update bars
+            document.getElementById('joyBar').style.width = joy + '%';
+            document.getElementById('angerBar').style.width = anger + '%';
+            document.getElementById('sadnessBar').style.width = sadness + '%';
+            document.getElementById('fearBar').style.width = fear + '%';
+            document.getElementById('disgustBar').style.width = disgust + '%';
+            
+            // Update values
+            document.getElementById('joyValue').textContent = joy + '%';
+            document.getElementById('angerValue').textContent = anger + '%';
+            document.getElementById('sadnessValue').textContent = sadness + '%';
+            document.getElementById('fearValue').textContent = fear + '%';
+            document.getElementById('disgustValue').textContent = disgust + '%';
+            
+            // Update dominant emotion
+            const dominantText = data.dominant_emotion.charAt(0).toUpperCase() + 
+                               data.dominant_emotion.slice(1);
+            document.getElementById('dominantEmotionText').textContent = dominantText;
+            document.getElementById('dominantEmotionText').className = 
+                'emotion-text ' + data.dominant_emotion;
+        }
+        
+        function clearForm() {
+            document.getElementById('textInput').value = '';
+            document.getElementById('resultSection').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+        
+        // Allow Enter key to submit
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('textInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    analyzeText();
+                }
+            });
+        });
+    </script>
 </body>
+</html>
