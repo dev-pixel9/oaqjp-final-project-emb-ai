@@ -33,8 +33,8 @@ oaqjp-final-project-emb-ai/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/dev-pixel9/oaqjp-final-project-emb-ai.git
-cd oaqjp-final-project-emb-ai
+git clone https://github.com/dev-pixel9/Final-Project-Emotional-Detector.git
+cd Final-Project-Emotional-Detector
 ```
 
 2. Install dependencies:
